@@ -1,1 +1,46 @@
 
+--[[
+  ESP for Brainrot Secret & Brainrot God
+  Game: Steal a Brainrot
+--]]
+
+local ESP_COLOR_SECRET = Color3.fromRGB(50, 255, 255)
+local ESP_COLOR_GOD = Color3.fromRGB(255, 215, 0)
+
+-- Function to create ESP
+local function createESP(obj, color, text)
+    if obj:FindFirstChild("Head") then
+        local Billboard = Instance.new("BillboardGui", obj.Head)
+        Billboard.Name = "ESP"
+        Billboard.Size = UDim2.new(0, 200, 0, 50)
+        Billboard.Adornee = obj.Head
+        Billboard.AlwaysOnTop = true
+
+        local Frame = Instance.new("Frame", Billboard)
+        Frame.Size = UDim2.new(1, 0, 1, 0)
+        Frame.BackgroundTransparency = 1
+
+        local Label = Instance.new("TextLabel", Frame)
+        Label.Size = UDim2.new(1, 0, 1, 0)
+        Label.BackgroundTransparency = 1
+        Label.Text = text
+        Label.TextColor3 = color
+        Label.TextStrokeTransparency = 0.5
+        Label.TextScaled = true
+        Label.Font = Enum.Font.GothamBold
+    end
+end
+
+-- Main ESP loop
+while true do
+    for _, obj in pairs(workspace:GetChildren()) do
+        if obj:IsA("Model") and obj:FindFirstChild("Head") then
+            if (obj.Name == "Brainrot Secret" or obj.Name == "Secret Brainrot") and not obj.Head:FindFirstChild("ESP") then
+                createESP(obj, ESP_COLOR_SECRET, "[SECRET BRAINROT]")
+            elseif (obj.Name == "Brainrot God" or obj.Name == "God Brainrot") and not obj.Head:FindFirstChild("ESP") then
+                createESP(obj, ESP_COLOR_GOD, "[GOD BRAINROT]")
+            end
+        end
+    end
+    wait(1)
+end
