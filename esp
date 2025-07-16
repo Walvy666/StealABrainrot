@@ -35,9 +35,9 @@ end
 while true do
     for _, obj in pairs(workspace:GetChildren()) do
         if obj:IsA("Model") and obj:FindFirstChild("Head") then
-            if (obj.Name == "Brainrot Secret" or obj.Name == "Secret Brainrot") and not obj.Head:FindFirstChild("ESP") then
+            if (obj.Name == "Secret" or obj.Name == "Secret") and not obj.Head:FindFirstChild("ESP") then
                 createESP(obj, ESP_COLOR_SECRET, "[SECRET BRAINROT]")
-            elseif (obj.Name == "Brainrot God" or obj.Name == "God Brainrot") and not obj.Head:FindFirstChild("ESP") then
+            elseif (obj.Name == "Brainrot God" or obj.Name == "Brainrot God") and not obj.Head:FindFirstChild("ESP") then
                 createESP(obj, ESP_COLOR_GOD, "[GOD BRAINROT]")
             end
         end
