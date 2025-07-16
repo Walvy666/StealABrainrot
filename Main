@@ -1,5 +1,4 @@
--- Rayfield UI version of Walvy Community TP Menu (No Key System)
--- Make sure Rayfield library is loaded before this script runs
+--Cihuyy
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
