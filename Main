@@ -1,5 +1,4 @@
--- Rayfield UI version of Walvy Community TP Menu (No Key System)
--- Make sure Rayfield library is loaded before this script runs
+-- Walvy Community Script - Dengan ESP Base Cooldown
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
@@ -22,9 +21,7 @@ local Window = Rayfield:CreateWindow({
 
 local MainTab = Window:CreateTab("Main", 4483362458)
 
-local StatusLabel
-
-StatusLabel = MainTab:CreateParagraph({
+local StatusLabel = MainTab:CreateParagraph({
     Title = "Status",
     Content = "Ready to Teleport."
 })
@@ -40,6 +37,7 @@ Rayfield:Notify({
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
 local player = Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hrp = char:WaitForChild("HumanoidRootPart")
@@ -67,7 +65,7 @@ end
 
 -- TP Functions
 function DeliverBrainrot(label)
-    local plots = workspace:FindFirstChild("Plots")
+    local plots = Workspace:FindFirstChild("Plots")
     if not plots then return end
     for _, plot in pairs(plots:GetChildren()) do
         local sign = plot:FindFirstChild("PlotSign")
@@ -89,7 +87,7 @@ function DeliverBrainrot(label)
 end
 
 function TPNearestBase(label)
-    local plots = workspace:FindFirstChild("Plots")
+    local plots = Workspace:FindFirstChild("Plots")
     if not plots then return end
     local closest, shortest = nil, math.huge
     for _, plot in pairs(plots:GetChildren()) do
@@ -125,7 +123,7 @@ end
 
 function TweenSteal(label)
     local delivery
-    for _, v in ipairs(workspace.Plots:GetDescendants()) do
+    for _, v in ipairs(Workspace.Plots:GetDescendants()) do
         if v.Name == "DeliveryHitbox" and v.Parent:FindFirstChild("PlotSign") and v.Parent.PlotSign:FindFirstChild("YourBase") and v.Parent.PlotSign.YourBase.Enabled then
             delivery = v
             break
@@ -141,7 +139,80 @@ function TweenSteal(label)
     label.Text("Tween TP Complete! Distance: "..math.floor(dist))
 end
 
--- Create Buttons
+-- ██████ ✨ ESP BASE BUTTON ✨ ██████
+
+local function StartESPBase()
+    local Plots = Workspace:FindFirstChild("Plots")
+    if not Plots then
+        warn("❌ Folder 'Plots' tidak ditemukan.")
+        return
+    end
+
+    local function findCooldownTextLabel(baseModel)
+        for _, obj in ipairs(baseModel:GetDescendants()) do
+            if obj:IsA("TextLabel") and obj.Text:match("^%d+s$") then
+                return obj
+            end
+        end
+        return nil
+    end
+
+    for _, baseModel in ipairs(Plots:GetChildren()) do
+        if baseModel:IsA("Model") then
+            local mainPart = baseModel.PrimaryPart or baseModel:FindFirstChildWhichIsA("BasePart", true)
+            if mainPart and not baseModel:FindFirstChild("BaseESP") then
+                local bb = Instance.new("BillboardGui")
+                bb.Name = "BaseESP"
+                bb.Adornee = mainPart
+                bb.Size = UDim2.new(0, 200, 0, 50)
+                bb.StudsOffset = Vector3.new(0, 6, 0)
+                bb.AlwaysOnTop = true
+                bb.Parent = baseModel
+
+                local label = Instance.new("TextLabel")
+                label.Size = UDim2.new(1, 0, 1, 0)
+                label.BackgroundTransparency = 1
+                label.TextScaled = true
+                label.Font = Enum.Font.GothamBold
+                label.TextStrokeTransparency = 0.2
+                label.TextColor3 = Color3.fromRGB(255, 255, 0)
+                label.Text = "⛺ BASE"
+                label.Parent = bb
+
+                task.spawn(function()
+                    while baseModel.Parent do
+                        local cooldownLabel = findCooldownTextLabel(baseModel)
+                        if cooldownLabel then
+                            local secondsLeft = tonumber(cooldownLabel.Text:match("^(%d+)s"))
+                            if secondsLeft and secondsLeft <= 2 then
+                                label.Text = "✅ Ready"
+                                label.TextColor3 = Color3.fromRGB(0, 255, 0)
+                            else
+                                label.Text = "⏳ " .. cooldownLabel.Text
+                                label.TextColor3 = Color3.fromRGB(255, 140, 0)
+                            end
+                        else
+                            label.Text = "✅ Unlocked"
+                            label.TextColor3 = Color3.fromRGB(0, 255, 0)
+                        end
+                        task.wait(1)
+                    end
+                end)
+            end
+        end
+    end
+end
+
+-- Tambahkan tombol untuk ESP Base
+MainTab:CreateButton({
+    Name = "🔎 ESP Base + Cooldown",
+    Callback = function()
+        StartESPBase()
+        StatusLabel:Set({Content = "ESP Base Activated"})
+    end
+})
+
+-- Tombol TP
 MainTab:CreateButton({
     Name = "TP To Delivery Box",
     Callback = function()
@@ -167,5 +238,3 @@ MainTab:CreateParagraph({
     Title = "Hotkey",
     Content = "Press RightShift to hide/show GUI"
 })
-
--- ████████ TAB ESP ████████
