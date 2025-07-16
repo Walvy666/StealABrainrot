@@ -1,0 +1,161 @@
+-- Rayfield UI version of Walvy Community TP Menu (No Key System)
+-- Make sure Rayfield library is loaded before this script runs
+
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "Walvy Community",
+    LoadingTitle = "Walvy Community",
+    LoadingSubtitle = "by Walvy",
+    ConfigurationSaving = {
+       Enabled = true,
+       FolderName = "Walvy",
+       FileName = "Settings"
+    },
+    Discord = {
+       Enabled = true,
+       Invite = "EXK4dQxJBv",
+       RememberJoins = true
+    },
+    KeySystem = false
+})
+
+local MainTab = Window:CreateTab("Main", 4483362458)
+
+local StatusLabel = MainTab:CreateParagraph({
+    Title = "Status",
+    Content = "Ready to Teleport."
+})
+
+Rayfield:Notify({
+    Title = "✅ Walvy Community Loaded",
+    Content = "Script berhasil dijalankan!",
+    Duration = 6,
+    Image = 4483362458
+})
+
+-- Service Setup
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local player = Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+local tpAmt = 80
+local void = CFrame.new(0, -3.4028234663852886e+38, 0)
+local teleporting = false
+local random = Random.new()
+
+local function TP(position)
+    if not teleporting then
+        teleporting = true
+        if typeof(position) == "CFrame" then
+            hrp.CFrame = position + Vector3.new(
+                random:NextNumber(-0.0001, 0.0001),
+                random:NextNumber(-0.0001, 0.0001),
+                random:NextNumber(-0.0001, 0.0001)
+            )
+            RunService.Heartbeat:Wait()
+            teleporting = false
+        end
+    end
+end
+
+-- Main Buttons
+MainTab:CreateButton({
+    Name = "TP To Delivery Box",
+    Callback = function()
+        DeliverBrainrot({Text = function(v) StatusLabel:Set({Content = v}) end})
+    end
+})
+
+MainTab:CreateButton({
+    Name = "TP Inside Nearest Base",
+    Callback = function()
+        TPNearestBase({Text = function(v) StatusLabel:Set({Content = v}) end})
+    end
+})
+
+MainTab:CreateButton({
+    Name = "Tween Steal",
+    Callback = function()
+        TweenSteal({Text = function(v) StatusLabel:Set({Content = v}) end})
+    end
+})
+
+MainTab:CreateParagraph({
+    Title = "Hotkey",
+    Content = "Press RightShift to hide/show GUI"
+})
+
+-- ████████ ESP TAB ████████
+local ESPTab = Window:CreateTab("ESP", 4483362458)
+
+ESPTab:CreateButton({
+    Name = "Base ESP (Cooldown)",
+    Callback = function()
+        local Workspace = game:GetService("Workspace")
+        local Plots = Workspace:FindFirstChild("Plots")
+        if not Plots then
+            warn("❌ Folder 'Plots' tidak ditemukan.")
+            return
+        end
+
+        local function findCooldownTextLabel(baseModel)
+            for _, obj in ipairs(baseModel:GetDescendants()) do
+                if obj:IsA("TextLabel") and obj.Text:match("^%d+s$") then
+                    return obj
+                end
+            end
+            return nil
+        end
+
+        for _, baseModel in ipairs(Plots:GetChildren()) do
+            if baseModel:IsA("Model") then
+                local mainPart = baseModel.PrimaryPart or baseModel:FindFirstChildWhichIsA("BasePart", true)
+                if mainPart and not baseModel:FindFirstChild("BaseESP") then
+                    local bb = Instance.new("BillboardGui")
+                    bb.Name = "BaseESP"
+                    bb.Adornee = mainPart
+                    bb.Size = UDim2.new(0, 200, 0, 50)
+                    bb.StudsOffset = Vector3.new(0, 6, 0)
+                    bb.AlwaysOnTop = true
+                    bb.Parent = baseModel
+
+                    local label = Instance.new("TextLabel")
+                    label.Size = UDim2.new(1, 0, 1, 0)
+                    label.BackgroundTransparency = 1
+                    label.TextScaled = true
+                    label.Font = Enum.Font.GothamBold
+                    label.TextStrokeTransparency = 0.2
+                    label.TextColor3 = Color3.fromRGB(255, 255, 0)
+                    label.Text = "⛺ BASE"
+                    label.Parent = bb
+
+                    task.spawn(function()
+                        while baseModel.Parent do
+                            local cooldownLabel = findCooldownTextLabel(baseModel)
+                            if cooldownLabel then
+                                local secondsLeft = tonumber(cooldownLabel.Text:match("^(%d+)s"))
+                                if secondsLeft and secondsLeft <= 2 then
+                                    label.Text = "✅ Ready"
+                                    label.TextColor3 = Color3.fromRGB(0, 255, 0)
+                                else
+                                    label.Text = "⏳ " .. cooldownLabel.Text
+                                    label.TextColor3 = Color3.fromRGB(255, 140, 0)
+                                end
+                            else
+                                label.Text = "✅ Unlocked"
+                                label.TextColor3 = Color3.fromRGB(0, 255, 0)
+                            end
+                            task.wait(1)
+                        end
+                    end)
+
+                    print("✅ ESP base ditambahkan:", baseModel.Name)
+                end
+            end
+        end
+    end
+})
