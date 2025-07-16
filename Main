@@ -1,4 +1,5 @@
---Cihuyy
+-- Rayfield UI version of Walvy Community TP Menu (No Key System)
+-- Make sure Rayfield library is loaded before this script runs
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
@@ -28,7 +29,14 @@ StatusLabel = MainTab:CreateParagraph({
     Content = "Ready to Teleport."
 })
 
--- Define teleport functions
+Rayfield:Notify({
+    Title = "✅ Walvy Community Loaded",
+    Content = "Script berhasil dijalankan!",
+    Duration = 6,
+    Image = 4483362458
+})
+
+-- Service Setup
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
@@ -41,6 +49,7 @@ local void = CFrame.new(0, -3.4028234663852886e+38, 0)
 local teleporting = false
 local random = Random.new()
 
+-- Teleport Function
 local function TP(position)
     if not teleporting then
         teleporting = true
@@ -56,6 +65,7 @@ local function TP(position)
     end
 end
 
+-- TP Functions
 function DeliverBrainrot(label)
     local plots = workspace:FindFirstChild("Plots")
     if not plots then return end
@@ -131,7 +141,7 @@ function TweenSteal(label)
     label.Text("Tween TP Complete! Distance: "..math.floor(dist))
 end
 
--- Create Rayfield Buttons
+-- Create Buttons
 MainTab:CreateButton({
     Name = "TP To Delivery Box",
     Callback = function()
@@ -156,4 +166,71 @@ MainTab:CreateButton({
 MainTab:CreateParagraph({
     Title = "Hotkey",
     Content = "Press RightShift to hide/show GUI"
+})
+
+-- ████████ TAB ESP ████████
+local ESPTab = Window:CreateTab("ESP", 4483362458)
+
+-- Fungsi Membuat ESP
+local function CreateESP(part, text)
+    if part:FindFirstChild("WalvyESP") then return end
+    local bill = Instance.new("BillboardGui", part)
+    bill.Name = "WalvyESP"
+    bill.AlwaysOnTop = true
+    bill.Size = UDim2.new(0, 100, 0, 40)
+    bill.StudsOffset = Vector3.new(0, 3, 0)
+
+    local label = Instance.new("TextLabel", bill)
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.Text = text
+    label.TextColor3 = Color3.new(1, 1, 0)
+    label.BackgroundTransparency = 1
+    label.TextStrokeTransparency = 0.5
+    label.Font = Enum.Font.GothamBold
+    label.TextScaled = true
+end
+
+-- Fungsi ESP untuk Secret
+local function ESPSecret()
+    local found = 0
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("Model") and obj:FindFirstChild("Head") and not obj.Head:FindFirstChild("WalvyESP") then
+            local name = obj.Name:lower()
+            if name:find("secret") then
+                CreateESP(obj.Head, "🧠 SECRET")
+                found += 1
+            end
+        end
+    end
+    print("✅ ESP Secret: " .. found .. " ditemukan")
+end
+
+-- Fungsi ESP untuk Brainrot God
+local function ESPGod()
+    local found = 0
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("Model") and obj:FindFirstChild("Head") and not obj.Head:FindFirstChild("WalvyESP") then
+            local name = obj.Name:lower()
+            if name:find("god") or name:find("brainrotgod") then
+                CreateESP(obj.Head, "👑 BRAINROT GOD")
+                found += 1
+            end
+        end
+    end
+    print("✅ ESP Brainrot God: " .. found .. " ditemukan")
+end
+
+-- Tombol ESP di Tab ESP
+ESPTab:CreateButton({
+    Name = "ESP Secret",
+    Callback = function()
+        ESPSecret()
+    end
+})
+
+ESPTab:CreateButton({
+    Name = "ESP Brainrot God",
+    Callback = function()
+        ESPGod()
+    end
 })
